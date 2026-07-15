@@ -12,6 +12,7 @@ FlutterWebRTC::FlutterWebRTC(FlutterWebRTCPlugin* plugin)
                                            plugin->textures(),
                                            plugin->task_runner()),
       FlutterVideoRendererManager::FlutterVideoRendererManager(this),
+      FlutterPipeVideoRendererManager::FlutterPipeVideoRendererManager(this),
       FlutterMediaStream::FlutterMediaStream(this),
       FlutterPeerConnection::FlutterPeerConnection(this),
       FlutterScreenCapture::FlutterScreenCapture(this),
@@ -485,6 +486,8 @@ void FlutterWebRTC::HandleMethodCall(
       return;
     }
     RTCPeerConnectionDispose(pc, peerConnectionId, std::move(result));
+  } else if(method_call.method_name().compare("createPipeVideoRenderer") == 0){
+    CreatePipeVideoRendererTexture(std::move(result));
   } else if (method_call.method_name().compare("createVideoRenderer") == 0) {
     CreateVideoRendererTexture(std::move(result));
   } else if (method_call.method_name().compare("videoRendererDispose") == 0) {
