@@ -10,6 +10,7 @@
 #include "flutter_peerconnection.h"
 #include "flutter_screen_capture.h"
 #include "flutter_video_renderer.h"
+#include "flutter_custom_track.h"
 
 #include "libwebrtc.h"
 #include "rtc_logging.h"
@@ -29,6 +30,7 @@ class FlutterWebRTCPlugin : public flutter::Plugin {
 
 class FlutterWebRTC : public FlutterWebRTCBase,
                       public FlutterVideoRendererManager,
+                      public FlutterCustomTrackManager,
                       public FlutterMediaStream,
                       public FlutterPeerConnection,
                       public FlutterScreenCapture,

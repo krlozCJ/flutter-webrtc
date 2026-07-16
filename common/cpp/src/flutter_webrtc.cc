@@ -12,7 +12,7 @@ FlutterWebRTC::FlutterWebRTC(FlutterWebRTCPlugin* plugin)
                                            plugin->textures(),
                                            plugin->task_runner()),
       FlutterVideoRendererManager::FlutterVideoRendererManager(this),
-      FlutterPipeVideoRendererManager::FlutterPipeVideoRendererManager(this),
+      FlutterCustomTrackManager::FlutterCustomTrackManager(this),
       FlutterMediaStream::FlutterMediaStream(this),
       FlutterPeerConnection::FlutterPeerConnection(this),
       FlutterScreenCapture::FlutterScreenCapture(this),
@@ -486,10 +486,25 @@ void FlutterWebRTC::HandleMethodCall(
       return;
     }
     RTCPeerConnectionDispose(pc, peerConnectionId, std::move(result));
-  } else if(method_call.method_name().compare("createPipeVideoRenderer") == 0){
-    CreatePipeVideoRendererTexture(std::move(result));
-  } else if (method_call.method_name().compare("createVideoRenderer") == 0) {
-    CreateVideoRendererTexture(std::move(result));
+  } else if(method_call.method_name().compare("createSintheticTrack") == 0){
+    if (!method_call.arguments()) {
+      result->Error("Bad Arguments", "Null constraints arguments received");
+      return;
+    }
+
+    const EncodableMap params =
+        GetValue<EncodableMap>(*method_call.arguments());
+    const std::string tagName = findString(params, "tagName");
+    // const std::string type = findString(params, "type");
+
+    CreateSintheticTrack(tagName, std::move(result));
+  } else if (method_call.method_name().compare("attachToTrack") == 0) {
+
+    const EncodableMap params = GetValue<EncodableMap>(*method_call.arguments());
+    const std::string sinthetic_track_id = findString(params, "sintheticTrackId");
+    const std::string track_id = findString(params, "trackId");
+
+    AttachToTrack(sinthetic_track_id, track_id, std::move(result));
   } else if (method_call.method_name().compare("videoRendererDispose") == 0) {
     if (!method_call.arguments()) {
       result->Error("Bad Arguments", "Null constraints arguments received");
