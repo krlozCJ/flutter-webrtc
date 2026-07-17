@@ -417,6 +417,22 @@ void FlutterWebRTC::HandleMethodCall(
     const EncodableMap params =
         GetValue<EncodableMap>(*method_call.arguments());
     const std::string stream_id = findString(params, "streamId");
+
+    scoped_refptr<RTCMediaStream> stream = MediaStreamForId(stream_id);
+    if(stream){
+      vector<scoped_refptr<RTCVideoTrack>> video_tracks = stream->video_tracks();
+      for (auto track : video_tracks.std_vector()) {
+
+        if(track->kind().std_string() == "video"){
+          if(IsAttachedToProxy(track)){
+            AutoUnAttachToTrack(track);
+          }else if(IsSintheticTrack(track->id().std_string())){
+            SintheticTrackDispose(track->id().std_string());
+          }
+        }
+      }
+    }
+
     MediaStreamDispose(stream_id, std::move(result));
   } else if (method_call.method_name().compare("mediaStreamTrackSetEnable") ==
              0) {
@@ -441,6 +457,23 @@ void FlutterWebRTC::HandleMethodCall(
     const EncodableMap params =
         GetValue<EncodableMap>(*method_call.arguments());
     const std::string track_id = findString(params, "trackId");
+
+    scoped_refptr<RTCMediaTrack> track_ref = LocalMediaTracksForId(track_id);
+
+    if(track_ref){
+      if(track_ref->kind().std_string() == "video"){
+
+        auto* video_track_ptr = static_cast<RTCVideoTrack*>(track_ref.get());
+
+        if(IsAttachedToProxy(video_track_ptr)){
+          AutoUnAttachToTrack(video_track_ptr);
+        }else if(IsSintheticTrack(track_id)){
+          SintheticTrackDispose(track_id);
+        }
+      }
+    }
+
+
     MediaStreamTrackDispose(track_id, std::move(result));
   } else if (method_call.method_name().compare("restartIce") == 0) {
     if (!method_call.arguments()) {

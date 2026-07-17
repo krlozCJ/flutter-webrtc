@@ -11,26 +11,26 @@
 #include <mutex>
 #include <vector>
 
-namespace flutter_webrtc_plugin{
-using namespace libwebrtc;
+namespace flutter_webrtc_plugin {
 
 class FlutterProxyRenderer
     : public RTCVideoRenderer<scoped_refptr<RTCVideoFrame>>,
       public RefCountInterface {
 
-    FlutterProxyRenderer() = default;
-    ~FlutterProxyRenderer();
+    public:
+        FlutterProxyRenderer() = default;
+        ~FlutterProxyRenderer();
 
-    void Initialize(scoped_refptr<RTCVideoSource> source);
+        void Initialize(scoped_refptr<RTCVideoSource> source);
 
-    virtual void OnFrame(scoped_refptr<RTCVideoFrame> frame) override;
+        virtual void OnFrame(scoped_refptr<RTCVideoFrame> frame) override;
 
-    void SetTrack(scoped_refptr<RTCVideoTrack> track);
+        void SetTrack(scoped_refptr<RTCVideoTrack> track);
 
-    std::string track_id;
+        std::string track_id;
 
     private:
-        mutable std::vector<uint8_t> rgb_buffer_;
+        mutable std::vector<uint8_t> rgba_buffer_;
         mutable std::mutex mutex_;
         scoped_refptr<RTCVideoTrack> track_ = nullptr;
         scoped_refptr<RTCVideoSource> source_ = nullptr;
@@ -39,7 +39,7 @@ class FlutterProxyRenderer
 
 class FlutterCustomTrackManager {
     public:
-        FlutterCustomTrackManager(FlutterWebRTCBase* base);
+        FlutterCustomTrackManager(FlutterWebRTCBase* base): base_(base){}
 
         void CreateSintheticTrack(
             const std::string& tagName,
@@ -56,6 +56,8 @@ class FlutterCustomTrackManager {
 
         bool IsAttachedToProxy(scoped_refptr<RTCVideoTrack> track);
 
+        bool IsSintheticTrack(const std::string& sinthetic_track_id);
+
         void SintheticTrackDispose(
             const std::string& sinthetic_track_id
         );
@@ -71,3 +73,4 @@ class FlutterCustomTrackManager {
             std::map<std::string, scoped_refptr<RTCVideoTrack>> origin_tracks_;
 };
 }
+#endif

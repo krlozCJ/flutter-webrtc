@@ -16,7 +16,7 @@ namespace flutter_webrtc_plugin {
         int height = frame->height();
         size_t required_rgba_size = width * height * 4;
 
-        if(rgb_buffer_.size() != required_rgba_size){
+        if(rgba_buffer_.size() != required_rgba_size){
             rgba_buffer_.resize(required_rgba_size);
         }
 
@@ -49,16 +49,16 @@ namespace flutter_webrtc_plugin {
     // =============================================================
     // =============================================================
 
-    FlutterCustomTrackManager::FlutterCustomTrackManager(FlutterWebRTCBase* base): base_(base) {}
+    // FlutterCustomTrackManager::FlutterCustomTrackManager(FlutterWebRTCBase* base): base_(base) {}
 
     void FlutterCustomTrackManager::CreateSintheticTrack(
         const std::string& tagName,
         std::unique_ptr<MethodResultProxy> result
     ) {
-        scoped_refptr<RTCMediaConstraints> constrains =
+        scoped_refptr<RTCMediaConstraints> constraints =
             RTCMediaConstraints::Create();
 
-        scoped_refptr<RTCVideoSource> source = base_->factory_->CreateCustomVideoSource(tagName, constrains);
+        scoped_refptr<RTCVideoSource> source = base_->factory_->CreateCustomVideoSource(tagName, constraints);
         if(!source){
             result->Error("Fail on Custom Source", "Imposible crear un source");
             return;
@@ -87,7 +87,7 @@ namespace flutter_webrtc_plugin {
 
         EncodableMap settings;
         settings[EncodableValue("deviceId")] =
-            EncodableValue(SanitizeUtf8ForFlutter(tagName));
+            EncodableValue(tagName);
         settings[EncodableValue("kind")] = EncodableValue("videoinput");
         settings[EncodableValue("width")] = EncodableValue(0);
         settings[EncodableValue("height")] = EncodableValue(0);
@@ -96,7 +96,7 @@ namespace flutter_webrtc_plugin {
 
         EncodableMap params;
         params[EncodableValue("track")] = EncodableValue(info);
-        result->Success()
+        result->Success();
     }
 
     void FlutterCustomTrackManager::AttachToTrack(
@@ -110,7 +110,8 @@ namespace flutter_webrtc_plugin {
                 if(it != renderers_.end()){
                     auto renderer = (*it).second;
                     // TODO: Buscar el renderer, no crearlo
-                    renderer->SetTrack(track)
+                    scoped_refptr<RTCVideoTrack> video_track = static_cast<RTCVideoTrack*>(track.get());
+                    renderer->SetTrack(video_track);
                     result->Success();
                     return;
                 }
@@ -130,6 +131,14 @@ namespace flutter_webrtc_plugin {
 
         return false;
     }
+
+    bool FlutterCustomTrackManager::IsSintheticTrack(const std::string& sinthetic_track_id){
+        auto it = sinthetic_tracks_.find(sinthetic_track_id);
+        if(it != sinthetic_tracks_.end()){
+            return true;
+        }
+        return false;
+    };
 
     // Cuando el track original quiere desacoplarse.
     // Especialmente cuando el track es eliminado y requiere ser liberado
@@ -154,7 +163,7 @@ namespace flutter_webrtc_plugin {
         if(it != renderers_.end()){
             auto renderer = (*it).second;
             auto track_id = renderer->track_id;
-            if(track_id && track_id.empty() == false){
+            if(!track_id.empty()){
                 auto itt = origin_tracks_.find(track_id);
                 if(itt != origin_tracks_.end()){
                     origin_tracks_.erase(itt);
@@ -170,7 +179,7 @@ namespace flutter_webrtc_plugin {
         const std::string& sinthetic_track_id
     ){
 
-        auto& it_source = sinthetic_tracks_.find(sinthetic_track_id);
+        auto it_source = sinthetic_tracks_.find(sinthetic_track_id);
         if(it_source != sinthetic_tracks_.end()){
             sinthetic_tracks_.erase(it_source);
         }

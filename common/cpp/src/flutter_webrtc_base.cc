@@ -67,6 +67,15 @@ scoped_refptr<RTCMediaTrack> FlutterWebRTCBase ::MediaTrackForId(const std::stri
   return nullptr;
 }
 
+scoped_refptr<RTCMediaTrack> FlutterWebRTCBase ::LocalMediaTracksForId(const std::string& id) {
+  auto it = local_tracks_.find(id);
+
+  if (it != local_tracks_.end())
+    return (*it).second;
+
+  return nullptr;
+}
+
 void FlutterWebRTCBase::RemoveMediaTrackForId(const std::string& id) {
   auto it = local_tracks_.find(id);
   if (it != local_tracks_.end())

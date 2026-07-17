@@ -30,6 +30,7 @@ using namespace libwebrtc;
 class FlutterVideoRenderer;
 class FlutterRTCDataChannelObserver;
 class FlutterPeerConnectionObserver;
+class FlutterCustomTrackManager;
 
 class FlutterWebRTCBase {
  public:
@@ -38,6 +39,7 @@ class FlutterWebRTCBase {
   friend class FlutterVideoRendererManager;
   friend class FlutterDataChannel;
   friend class FlutterPeerConnectionObserver;
+  friend class FlutterCustomTrackManager;
   friend class FlutterScreenCapture;
   friend class FlutterFrameCryptor;
   friend class FlutterDataPacketCryptor;
@@ -84,6 +86,7 @@ class FlutterWebRTCBase {
                              RTCConfiguration& configuration);
 
   scoped_refptr<RTCMediaTrack> MediaTracksForId(const std::string& id);
+  scoped_refptr<RTCMediaTrack> LocalMediaTracksForId(const std::string& id);
 
   void RemoveTracksForId(const std::string& id);
 

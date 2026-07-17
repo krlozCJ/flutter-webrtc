@@ -1,6 +1,7 @@
 #include "flutter_media_stream.h"
 
 #include "flutter_utf8_sanitize.h"
+#include "flutter_custom_track.h"
 
 #define DEFAULT_WIDTH 1280
 #define DEFAULT_HEIGHT 720
@@ -588,8 +589,6 @@ void FlutterMediaStream::MediaStreamDispose(
     return;
   }
 
-  // Casteamos base_ para acceder a los métodos de tu manager
-  auto* custom_manager = static_cast<FlutterCustomTrackManager*>(base_);
 
   vector<scoped_refptr<RTCAudioTrack>> audio_tracks = stream->audio_tracks();
 
@@ -600,12 +599,6 @@ void FlutterMediaStream::MediaStreamDispose(
 
   vector<scoped_refptr<RTCVideoTrack>> video_tracks = stream->video_tracks();
   for (auto track : video_tracks.std_vector()) {
-    // --- TU LÓGICA INTERCEPTADA (Con el custom_manager) ---
-    if(custom_manager->IsAttachedToProxy(track)){
-      custom_manager->AutoUnAttachToTrack(track);
-    }
-    custom_manager->SintheticTrackDispose(track->id().std_string());
-
     stream->RemoveTrack(track);
     base_->local_tracks_.erase(track->id().std_string());
     if (base_->video_capturers_.find(track->id().std_string()) !=
@@ -650,24 +643,6 @@ void FlutterMediaStream::MediaStreamTrackSwitchCamera(
 void FlutterMediaStream::MediaStreamTrackDispose(
     const std::string& track_id,
     std::unique_ptr<MethodResultProxy> result) {
-
-  // Casteamos base_ para acceder a los métodos de tu manager
-  auto* custom_manager = static_cast<FlutterCustomTrackManager*>(base_);
-
-  // --- TU LÓGICA INTERCEPTADA (A nivel global, fuera del bucle de streams) ---
-  // Buscamos el track en local_tracks_ para desatarlo incluso si no está en ningún stream
-  auto it_track = base_->local_tracks_.find(track_id);
-  if (it_track != base_->local_tracks_.end()) {
-    // Extraemos el puntero original casteándolo a RTCVideoTrack*
-    auto track = static_cast<RTCVideoTrack*>(it_track->second.get());
-
-    if (custom_manager->IsAttachedToProxy(track)) {
-      custom_manager->AutoUnAttachToTrack(track);
-    }
-  }
-
-  // Liberamos recursos si el track a destruir resulta ser un proxy
-  custom_manager->SintheticTrackDispose(track_id);
 
   for (auto it : base_->local_streams_) {
     auto stream = it.second;
