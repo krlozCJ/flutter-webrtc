@@ -1,14 +1,24 @@
 #include "flutter_custom_track.h"
+#include <windows.h>
+#include <thread>
+#include <iostream>
 
 namespace flutter_webrtc_plugin {
     FlutterProxyRenderer::~FlutterProxyRenderer(){}
 
     void FlutterProxyRenderer::Initialize(
-        scoped_refptr<RTCVideoSource> source
+        scoped_refptr<RTCVideoSource> source,
+        std::string& track_id;
     ){
         source_ = source;
+        sinthetic_track_id_ = track_id;
     }
 
+//     // Función que será ejecutada en el hilo secundario
+// void mostrarAlertaNoBloqueante(std::string mensaje, std::string titulo) {
+//     // MB_OK es el tipo de botón, MB_ICONINFORMATION es el icono
+//     MessageBoxA(NULL, mensaje.c_str(), titulo.c_str(), MB_OK | MB_ICONINFORMATION);
+// }
     void FlutterProxyRenderer::OnFrame(scoped_refptr<RTCVideoFrame> frame){
         std::lock_guard<std::mutex> lock(mutex_);
 
@@ -28,17 +38,31 @@ namespace flutter_webrtc_plugin {
             height
         );
 
+        if(!filter_manager_){
+            filter_manager_.emplace(
+                filter_manager::create_filter_manager(sinthetic_track_id_, width, height)
+            );
+        }
+
+        (*filter_manager_)->process_frame_inplace(
+            reinterpret_cast<uintptr_t>(rgba_buffer_.data()),
+            width, height, width * 4
+        );
+
         source_->OnCapturedFrame(frame);
     }
 
     void FlutterProxyRenderer::SetTrack(scoped_refptr<RTCVideoTrack> track){
         if(track_ != track){
             if(track_){
+                // std::thread hiloAlerta(mostrarAlertaNoBloqueante, "Se libera el track anterior", track_->id().std_string());
+                // hiloAlerta.detach();
                 track_->RemoveRenderer(this);
                 track_id.clear();
             }
             track_ = track;
             if(track_){
+                std::cout << "Se añade el render correctamente." << std::endl;
                 track_->AddRenderer(this);
                 track_id = track_->id().std_string();
             }
@@ -96,7 +120,7 @@ namespace flutter_webrtc_plugin {
 
         EncodableMap params;
         params[EncodableValue("track")] = EncodableValue(info);
-        result->Success();
+        result->Success(EncodableValue(params));
     }
 
     void FlutterCustomTrackManager::AttachToTrack(
@@ -112,7 +136,9 @@ namespace flutter_webrtc_plugin {
                     // TODO: Buscar el renderer, no crearlo
                     scoped_refptr<RTCVideoTrack> video_track = static_cast<RTCVideoTrack*>(track.get());
                     renderer->SetTrack(video_track);
-                    result->Success();
+                    result->Success(EncodableValue("Verdadero"));
+                    origin_tracks_[track_id] = video_track;
+                    std::cout << "Se asignó correctamente." << std::endl;
                     return;
                 }
             }
@@ -168,11 +194,12 @@ namespace flutter_webrtc_plugin {
                 if(itt != origin_tracks_.end()){
                     origin_tracks_.erase(itt);
                 }
-                renderer->SetTrack(nullptr);
-                renderers_.erase(it);
             }
+            renderer->SetTrack(nullptr);
+            renderers_.erase(it);
         }
     }
+
 
     // Cuando explicitamente se libera al track sintetico
     void FlutterCustomTrackManager::SintheticTrackDispose(
@@ -194,9 +221,9 @@ namespace flutter_webrtc_plugin {
                 if(it_origin != origin_tracks_.end()){
                     origin_tracks_.erase(it_origin);
                 }
-                renderer->SetTrack(nullptr);
             }
-
+            renderer->SetTrack(nullptr);
+            filter_manager::destroy_filter_manager(sinthetic_track_id);
             renderers_.erase(it_renderer);
         }
     }

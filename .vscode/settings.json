@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "rust/filter_manager/Cargo.toml"
+    ]
+}

@@ -657,6 +657,9 @@ void FlutterMediaStream::MediaStreamTrackDispose(
       if (track->id().std_string() == track_id) {
         stream->RemoveTrack(track);
 
+      }
+    }
+  }
         if (base_->video_capturers_.find(track_id) !=
             base_->video_capturers_.end()) {
           auto video_capture = base_->video_capturers_[track_id];
@@ -665,9 +668,6 @@ void FlutterMediaStream::MediaStreamTrackDispose(
           }
           base_->video_capturers_.erase(track_id);
         }
-      }
-    }
-  }
   base_->RemoveMediaTrackForId(track_id);
   result->Success();
 }

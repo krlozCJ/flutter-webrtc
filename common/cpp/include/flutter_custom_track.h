@@ -7,6 +7,7 @@
 #include "rtc_video_renderer.h"
 #include "rtc_video_source.h"
 #include "rtc_mediaconstraints.h"
+#include "filter_manager/lib.rs.h"
 
 #include <mutex>
 #include <vector>
@@ -21,7 +22,7 @@ class FlutterProxyRenderer
         FlutterProxyRenderer() = default;
         ~FlutterProxyRenderer();
 
-        void Initialize(scoped_refptr<RTCVideoSource> source);
+        void Initialize(scoped_refptr<RTCVideoSource> source, const std::string& track_id);
 
         virtual void OnFrame(scoped_refptr<RTCVideoFrame> frame) override;
 
@@ -34,6 +35,9 @@ class FlutterProxyRenderer
         mutable std::mutex mutex_;
         scoped_refptr<RTCVideoTrack> track_ = nullptr;
         scoped_refptr<RTCVideoSource> source_ = nullptr;
+
+        std::string sinthetic_track_id_;
+        std::optional<rust::Box<filter_manager::FilterManager>> filter_manager_;
 
 };
 

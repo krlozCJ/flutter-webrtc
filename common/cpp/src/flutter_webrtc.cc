@@ -458,17 +458,17 @@ void FlutterWebRTC::HandleMethodCall(
         GetValue<EncodableMap>(*method_call.arguments());
     const std::string track_id = findString(params, "trackId");
 
-    scoped_refptr<RTCMediaTrack> track_ref = LocalMediaTracksForId(track_id);
 
+    if(IsSintheticTrack(track_id)){
+      SintheticTrackDispose(track_id);
+    }
+    scoped_refptr<RTCMediaTrack> track_ref = LocalMediaTracksForId(track_id);
     if(track_ref){
       if(track_ref->kind().std_string() == "video"){
-
         auto* video_track_ptr = static_cast<RTCVideoTrack*>(track_ref.get());
 
         if(IsAttachedToProxy(video_track_ptr)){
           AutoUnAttachToTrack(video_track_ptr);
-        }else if(IsSintheticTrack(track_id)){
-          SintheticTrackDispose(track_id);
         }
       }
     }
@@ -538,6 +538,8 @@ void FlutterWebRTC::HandleMethodCall(
     const std::string track_id = findString(params, "trackId");
 
     AttachToTrack(sinthetic_track_id, track_id, std::move(result));
+  } else if (method_call.method_name().compare("createVideoRenderer") == 0) {
+    CreateVideoRendererTexture(std::move(result));
   } else if (method_call.method_name().compare("videoRendererDispose") == 0) {
     if (!method_call.arguments()) {
       result->Error("Bad Arguments", "Null constraints arguments received");
