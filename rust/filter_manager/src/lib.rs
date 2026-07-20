@@ -12,6 +12,8 @@ mod ffi {
         type FilterManager;
         fn create_filter_manager(track_id: &str, width: u32, height: u32) -> Box<FilterManager>;
         fn process_frame_inplace(self: &mut FilterManager, ptr: usize, width: u32, height: u32, stride: u32);
+        fn add_color_correction(self: &mut FilterManager);
+        fn set_color_correction(self: &mut FilterManager, brightness: f32, contrast: f32, saturation: f32);
         fn destroy_filter_manager(track_id: &str);
     }
 }

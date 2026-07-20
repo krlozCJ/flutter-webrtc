@@ -89,7 +89,7 @@ impl GpuFilter for ColorCorrectionFilter {
             let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor::default());
             pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &bind_group, &[]);
-            pass.dispatch_workgroups(1920 / 8, 1080 / 8, 1); // ajusta según tu resolución real
+            pass.dispatch_workgroups((ctx.width + 7) / 8, (ctx.height + 7) / 8, 1); // ajusta según tu resolución real
         }
         ctx.queue.submit(Some(encoder.finish()));
     }

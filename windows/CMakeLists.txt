@@ -26,6 +26,15 @@ corrosion_add_cxxbridge(filter_manager_cxx
 )
 
 # --- end Rust ---
+
+# -- LibYuv --
+FetchContent_Declare(
+    libyuv
+    GIT_REPOSITORY https://chromium.googlesource.com/libyuv/libyuv
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(libyuv)
+# --- end LibYuv ---
 # This value is used when generating builds using this plugin, so it must
 # not be changed
 set(PLUGIN_NAME "flutter_webrtc_plugin")
@@ -73,6 +82,7 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE
   flutter
   flutter_wrapper_plugin
   filter_manager_cxx
+  yuv
   "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libwebrtc/lib/libwebrtc.dll.lib"
   avrt.lib
   ksuser.lib

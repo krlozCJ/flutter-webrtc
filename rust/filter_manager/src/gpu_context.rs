@@ -3,13 +3,18 @@ pub struct GpuContext {
     pub queue: wgpu::Queue,
     pub texture_a: wgpu::Texture,
     pub texture_b: wgpu::Texture,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl GpuContext {
     pub fn new(width: u32, height: u32) -> Self {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::DX12,
-            ..Default::default()
+            flags: wgpu::InstanceFlags::default(),
+            backend_options: wgpu::BackendOptions::default(),
+            display: None,
+            memory_budget_thresholds: wgpu::MemoryBudgetThresholds::default()
         });
         let adapter = pollster::block_on(
             instance.request_adapter(&wgpu::RequestAdapterOptions::default())
@@ -35,6 +40,6 @@ impl GpuContext {
         let texture_a = make_tex(&device);
         let texture_b = make_tex(&device);
 
-        Self { device, queue, texture_a, texture_b }
+        Self { device, queue, texture_a, texture_b, width, height }
     }
 }

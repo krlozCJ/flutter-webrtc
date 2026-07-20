@@ -8,6 +8,7 @@
 #include "rtc_video_source.h"
 #include "rtc_mediaconstraints.h"
 #include "filter_manager/lib.rs.h"
+#include <libyuv.h>
 
 #include <mutex>
 #include <vector>
@@ -32,6 +33,7 @@ class FlutterProxyRenderer
 
     private:
         mutable std::vector<uint8_t> rgba_buffer_;
+        mutable std::vector<uint8_t> i420_buffer_; // nuevo
         mutable std::mutex mutex_;
         scoped_refptr<RTCVideoTrack> track_ = nullptr;
         scoped_refptr<RTCVideoSource> source_ = nullptr;

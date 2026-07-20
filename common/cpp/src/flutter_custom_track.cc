@@ -8,7 +8,7 @@ namespace flutter_webrtc_plugin {
 
     void FlutterProxyRenderer::Initialize(
         scoped_refptr<RTCVideoSource> source,
-        std::string& track_id;
+        const std::string track_id
     ){
         source_ = source;
         sinthetic_track_id_ = track_id;
@@ -42,6 +42,8 @@ namespace flutter_webrtc_plugin {
             filter_manager_.emplace(
                 filter_manager::create_filter_manager(sinthetic_track_id_, width, height)
             );
+            (*filter_manager_)->add_color_correction();
+            (*filter_manager_)->set_color_correction(01f, 1.2f, 1.0f);
         }
 
         (*filter_manager_)->process_frame_inplace(
@@ -49,7 +51,34 @@ namespace flutter_webrtc_plugin {
             width, height, width * 4
         );
 
-        source_->OnCapturedFrame(frame);
+        // --- Reconstrucción I420 ---
+        size_t required_i420_size = (width * height * 3) / 2;
+        if(i420_buffer_.size() != required_i420_size){
+            i420_buffer_.resize(required_i420_size);
+        }
+
+        int stride_y = width;
+        int stride_uv = (width + 1) / 2;
+        uint8_t* data_y = i420_buffer_.data();
+        uint8_t* data_u = data_y + stride_y * height;
+        uint8_t* data_v = data_u + stride_uv * ((height + 1) / 2);
+
+        libyuv::ABGRToI420(
+            rgba_buffer_.data(), width * 4,
+            data_y, stride_y,
+            data_u, stride_uv,
+            data_v, stride_uv,
+            width, height
+        );
+
+        scoped_refptr<RTCVideoFrame> new_frame = RTCVideoFrame::Create(
+            width, height,
+            data_y, stride_y,
+            data_u, stride_uv,
+            data_v, stride_uv
+        );
+
+        source_->OnCapturedFrame(new_frame);
     }
 
     void FlutterProxyRenderer::SetTrack(scoped_refptr<RTCVideoTrack> track){
