@@ -14,18 +14,15 @@ namespace flutter_webrtc_plugin {
 
     void FlutterProxyRenderer::Initialize(
         scoped_refptr<RTCVideoSource> source
-        // const std::string track_id
     ){
         source_ = source;
-        // sinthetic_track_id_ = track_id;
 
         // Inicializamos el manager de C# (retorna el puntero GCHandle)
         if (!csharp_filter_manager_) {
             csharp_filter_manager_ = RegisterManager();
-            
             // Aplicamos el filtro inicial pasando un JSON
             // Nota: Asegúrate de que tu C# procese esta estructura.
-            std::string initial_config = "{\"color_base\": {\"type\": \"color\", \"contrast\": 1.2, \"saturation\": 1.2}}";
+            std::string initial_config = "{\"belleza_suave\": {\"type\": \"color\", \"contrast\": 1.2, \"brightness\": 10.0, \"saturation\": 1.5, \"temperature\": 5}}";
             ApplyFilter(csharp_filter_manager_, initial_config.c_str());
         }
     }

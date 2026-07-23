@@ -117,21 +117,23 @@ class _CustomSampleState extends State<CustomSample> {
 
   void callCamera() async {
     try {
+      // final deviceId =
+      //     (await navigator.mediaDevices.enumerateDevices()).firstWhere((d) {
+      //   return d.label.contains("HD Pro");
+      // }).deviceId;
       final deviceId =
-          (await navigator.mediaDevices.enumerateDevices()).firstWhere((d) {
-        return d.label.contains("HD Pro");
-      }).deviceId;
+          (await navigator.mediaDevices.enumerateDevices()).first.deviceId;
 
       final constrain = {
-        "video": deviceId == null
+        'video': deviceId == null
             ? true
             : {
-                "mandatory": {"minFrameRate": 60},
-                "optional": [
-                  {"sourceId": deviceId},
+                'mandatory': {'minFrameRate': 60},
+                'optional': [
+                  {'sourceId': deviceId},
                 ],
               },
-        "audio": true,
+        'audio': true,
       };
 
       mediaStream = await navigator.mediaDevices.getUserMedia(constrain);
@@ -143,25 +145,24 @@ class _CustomSampleState extends State<CustomSample> {
 
       await mediaStream!.removeTrack(origin!);
       await mediaStream!.addTrack(trackProxy!);
-      await mediaStream!.getTracks();
       print(mediaStream!.getVideoTracks().first.id);
     } catch (e, s) {
-      print("imposible $e");
+      print('imposible $e');
       print(s);
       try {
         await origin?.stop();
       } catch (e) {
-        print("No se pudo liberar el origen: $e");
+        print('No se pudo liberar el origen: $e');
       }
       try {
         await trackProxy?.stop();
       } catch (e) {
-        print("No se pudo liberar el proxy: $e");
+        print('No se pudo liberar el proxy: $e');
       }
       try {
         await mediaStream?.dispose();
       } catch (e) {
-        print("No se pudo liberar el stream: $e");
+        print('No se pudo liberar el stream: $e');
       }
     }
   }
