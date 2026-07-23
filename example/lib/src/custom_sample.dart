@@ -33,35 +33,57 @@ class _CustomSampleState extends State<CustomSample> {
           Expanded(
               child: Container(
             color: Colors.black,
-            child: rendering ? RTCVideoView(renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,placeholderBuilder: (context) => Container(color: Colors.red,),) : null,
+            child: rendering
+                ? RTCVideoView(
+                    renderer!,
+                    objectFit:
+                        RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+                    placeholderBuilder: (context) => Container(
+                      color: Colors.red,
+                    ),
+                  )
+                : null,
           )),
-          
-                  SizedBox(height: 10,),
+          SizedBox(
+            height: 10,
+          ),
           Row(
             children: [
-                  SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
               ElevatedButton(
                   onPressed: _startRenderer, child: Text('Iniciar renderer')),
-                  SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
               ElevatedButton(
                   onPressed: callCamera, child: Text('Iniciar cámara')),
-                  SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
               ElevatedButton(
                   onPressed: _startRender, child: Text('Iniciar render')),
-                  SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
               ElevatedButton(
                   onPressed: _switching, child: Text('Cambiar renders')),
-                  SizedBox(width: 10,),
+              SizedBox(
+                width: 10,
+              ),
             ],
           ),
-                  SizedBox(height: 10,),
+          SizedBox(
+            height: 10,
+          ),
         ],
       ),
     );
   }
 
   @override
-  void dispose() async  {
+  void dispose() async {
     super.dispose();
     // await mediaStream?.removeTrack(trackProxy!);
     trackProxy = null;
@@ -78,10 +100,10 @@ class _CustomSampleState extends State<CustomSample> {
 
   void _startRender() async {
     try {
-    renderer!.srcObject = mediaStream;
-    setState(() {
-    rendering = true;
-    });
+      renderer!.srcObject = mediaStream;
+      setState(() {
+        rendering = true;
+      });
     } catch (e) {
       print("No se pudo iniciar el render: $e");
     }
@@ -95,7 +117,25 @@ class _CustomSampleState extends State<CustomSample> {
 
   void callCamera() async {
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({'video': true});
+      final deviceId =
+          (await navigator.mediaDevices.enumerateDevices()).firstWhere((d) {
+        return d.label.contains("HD Pro");
+      }).deviceId;
+
+      final constrain = {
+        "video": deviceId == null
+            ? true
+            : {
+                "mandatory": {"minFrameRate": 60},
+                "optional": [
+                  {"sourceId": deviceId},
+                ],
+              },
+        "audio": true,
+      };
+
+      mediaStream = await navigator.mediaDevices.getUserMedia(constrain);
+
       origin = mediaStream!.getVideoTracks().first;
       trackProxy = await origin!.createProxy();
 

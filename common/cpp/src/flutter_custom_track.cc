@@ -4,14 +4,30 @@
 #include <iostream>
 
 namespace flutter_webrtc_plugin {
-    FlutterProxyRenderer::~FlutterProxyRenderer(){}
+    // Asegúrate de liberar la memoria en el destructor de FlutterProxyRenderer
+    FlutterProxyRenderer::~FlutterProxyRenderer() {
+        if (csharp_filter_manager_) {
+            RemoveManager(csharp_filter_manager_);
+            csharp_filter_manager_ = nullptr;
+        }
+    }
 
     void FlutterProxyRenderer::Initialize(
-        scoped_refptr<RTCVideoSource> source,
-        const std::string track_id
+        scoped_refptr<RTCVideoSource> source
+        // const std::string track_id
     ){
         source_ = source;
-        sinthetic_track_id_ = track_id;
+        // sinthetic_track_id_ = track_id;
+
+        // Inicializamos el manager de C# (retorna el puntero GCHandle)
+        if (!csharp_filter_manager_) {
+            csharp_filter_manager_ = RegisterManager();
+            
+            // Aplicamos el filtro inicial pasando un JSON
+            // Nota: Asegúrate de que tu C# procese esta estructura.
+            std::string initial_config = "{\"color_base\": {\"type\": \"color\", \"contrast\": 1.2, \"saturation\": 1.2}}";
+            ApplyFilter(csharp_filter_manager_, initial_config.c_str());
+        }
     }
 
 //     // Función que será ejecutada en el hilo secundario
@@ -30,6 +46,7 @@ namespace flutter_webrtc_plugin {
             rgba_buffer_.resize(required_rgba_size);
         }
 
+        // Convertir de formato WebRTC a ARGB (en memoria RGBA/ABGR)
         frame->ConvertToARGB(
             RTCVideoFrame::Type::kABGR,
             rgba_buffer_.data(),
@@ -38,18 +55,11 @@ namespace flutter_webrtc_plugin {
             height
         );
 
-        if(!filter_manager_){
-            filter_manager_.emplace(
-                filter_manager::create_filter_manager(sinthetic_track_id_, width, height)
-            );
-            (*filter_manager_)->add_color_correction();
-            (*filter_manager_)->set_color_correction(01f, 1.2f, 1.0f);
+        // --- PROCESAMIENTO C# ---
+        // Le pasamos el puntero a C# para que modifique rgba_buffer_ in-place
+        if (csharp_filter_manager_) {
+            ProcessFrame(csharp_filter_manager_, rgba_buffer_.data(), width, height);
         }
-
-        (*filter_manager_)->process_frame_inplace(
-            reinterpret_cast<uintptr_t>(rgba_buffer_.data()),
-            width, height, width * 4
-        );
 
         // --- Reconstrucción I420 ---
         size_t required_i420_size = (width * height * 3) / 2;
@@ -252,7 +262,6 @@ namespace flutter_webrtc_plugin {
                 }
             }
             renderer->SetTrack(nullptr);
-            filter_manager::destroy_filter_manager(sinthetic_track_id);
             renderers_.erase(it_renderer);
         }
     }
