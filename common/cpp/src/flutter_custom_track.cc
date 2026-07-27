@@ -22,7 +22,7 @@ namespace flutter_webrtc_plugin {
             csharp_filter_manager_ = RegisterManager();
             // Aplicamos el filtro inicial pasando un JSON
             // Nota: Asegúrate de que tu C# procese esta estructura.
-            std::string initial_config = "{\"belleza_suave\": {\"type\": \"color\", \"contrast\": 1.2, \"brightness\": 10.0, \"saturation\": 1.5, \"temperature\": 5}}";
+            std::string initial_config = "{\"colore\": {\"type\": \"color\", \"contrast\": 1.0, \"brightness\": 0.0, \"saturation\": 1.0, \"temperature\": 0}, \"belleza\": {\"type\": \"beauty\",  \"intensity\": 1.5}}";
             ApplyFilter(csharp_filter_manager_, initial_config.c_str());
         }
     }

@@ -117,12 +117,13 @@ class _CustomSampleState extends State<CustomSample> {
 
   void callCamera() async {
     try {
-      // final deviceId =
-      //     (await navigator.mediaDevices.enumerateDevices()).firstWhere((d) {
-      //   return d.label.contains("HD Pro");
-      // }).deviceId;
       final deviceId =
-          (await navigator.mediaDevices.enumerateDevices()).first.deviceId;
+          (await navigator.mediaDevices.enumerateDevices()).firstWhere((d) {
+        print(d.label);
+        return d.label.contains("HD Pro");
+      }).deviceId;
+      // final deviceId =
+      //     (await navigator.mediaDevices.enumerateDevices()).first.deviceId;
 
       final constrain = {
         'video': deviceId == null
